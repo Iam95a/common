@@ -1,0 +1,14 @@
+syntax = "proto3";
+option java_package = "com.chen.common.protobuf";
+option java_outer_classname = "SingleMessageProto";
+
+message SingleMessage{
+      int32 msgId=1;
+      int32 sender=2;
+      int32 receiver=3;
+      int32 type=4;
+      string content=5;
+      string nickname=6;
+      string password=7;
+      int32 userId=8;
+}
