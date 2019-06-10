@@ -3,6 +3,8 @@ package com.chen.common.im;
 import com.chen.common.im.entity.User;
 import com.chen.common.protobuf.SingleMessageProto;
 import com.chen.common.protobuf.enums.TypeEnum;
+import com.chen.common.redis.RedisKeys;
+import com.chen.common.redis.RedisUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,6 +17,7 @@ import io.netty.handler.codec.protobuf.ProtobufDecoder;
 import io.netty.handler.codec.protobuf.ProtobufEncoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -43,17 +46,28 @@ public class ImServer {
                                 if (msg instanceof SingleMessageProto.SingleMessage) {
                                     SingleMessageProto.SingleMessage singleMessage = (SingleMessageProto.SingleMessage) msg;
                                     if (singleMessage.getType() == TypeEnum.LOGIN.getCode()) {
-                                        User user = new User();
-                                        user.setUserId(1);
-                                        user.setNickname(singleMessage.getNickname());
-                                        map.put(user.getUserId(), user);
-                                        ctx.writeAndFlush(getReturnMessage(singleMessage, user));
+                                        String password = singleMessage.getPassword();
+                                        String nickname = singleMessage.getNickname();
+                                        Map<String, String> userMap = RedisUtil.getRedisUtil().hgetall(nickname);
+                                        User user = User.map2User(userMap);
+                                        if (user == null) {
+                                            //那么走用户注册的路线
+                                        } else {
+                                            if(user.getPassword().equals(DigestUtils.md5Hex(password))){
+                                                //密码校验通过
+                                            }
+                                        }
+//                                        if()
+
                                     }
                                 } else {
                                     System.out.println(msg);
                                 }
                             }
 
+                            private long getId() {
+                                return RedisUtil.getRedisUtil().incrBy(RedisKeys.USER_ID, 1);
+                            }
 
                             private SingleMessageProto.SingleMessage getReturnMessage(SingleMessageProto.SingleMessage singleMessage, User user) {
                                 SingleMessageProto.SingleMessageOrBuilder builder = SingleMessageProto.SingleMessage.newBuilder();
