@@ -9,6 +9,8 @@ public enum TypeEnum {
 
     LOGIN(1, ""),
     RE_LOGIN(2,""),
+    SINGLE(3,""),
+    ALL(4,""),
     ;
     int code;
     String desc;

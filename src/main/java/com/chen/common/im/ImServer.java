@@ -24,7 +24,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ImServer {
-    private static Map<Integer, User> map = new ConcurrentHashMap();
+    private static Map<Integer, User> onlineMap = new ConcurrentHashMap();
+    private static Map<String, User> channelMap = new ConcurrentHashMap<>();
 
     public static void main(String[] args) throws Exception {
         NioEventLoopGroup group = new NioEventLoopGroup();
@@ -42,6 +43,19 @@ public class ImServer {
                         sc.pipeline().addLast(new ProtobufEncoder());
                         sc.pipeline().addLast(new ChannelInboundHandlerAdapter() {
                             @Override
+                            public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                                System.out.println("客户端上线");
+                            }
+
+                            @Override
+                            public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                System.out.println("客户端掉线");
+                                User user = channelMap.get(sc.id().asShortText());
+                                onlineMap.remove(user.getUserId());
+                                channelMap.remove(sc.id().asShortText());
+                            }
+
+                            @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                                 if (msg instanceof SingleMessageProto.SingleMessage) {
                                     SingleMessageProto.SingleMessage singleMessage = (SingleMessageProto.SingleMessage) msg;
@@ -52,13 +66,52 @@ public class ImServer {
                                         User user = User.map2User(userMap);
                                         if (user == null) {
                                             //那么走用户注册的路线
+                                            Long userId = getId();
+                                            user = new User();
+                                            user.setUserId(userId.intValue());
+                                            user.setNickname(nickname);
+                                            user.setPassword(DigestUtils.md5Hex(password));
+                                            user.setChannel(sc);
+                                            RedisUtil.getRedisUtil().hmset(nickname, User.user2Map(user));
+                                            channelMap.put(sc.id().asShortText(), user);
+                                            onlineMap.put(userId.intValue(), user);
+                                            SingleMessageProto.SingleMessage.Builder builder = SingleMessageProto.SingleMessage.newBuilder();
+                                            builder.setSender(0);
+                                            builder.setMsgId(singleMessage.getMsgId());
+                                            builder.setType(TypeEnum.RE_LOGIN.getCode());
+                                            builder.setUserId(user.getUserId());
+                                            builder.setNickname(nickname);
+                                            sc.writeAndFlush(builder.build());
                                         } else {
-                                            if(user.getPassword().equals(DigestUtils.md5Hex(password))){
+                                            if (user.getPassword().equals(DigestUtils.md5Hex(password))) {
                                                 //密码校验通过
+                                                channelMap.put(sc.id().asShortText(), user);
+                                                onlineMap.put(user.getUserId().intValue(), user);
+                                                SingleMessageProto.SingleMessage.Builder builder = SingleMessageProto.SingleMessage.newBuilder();
+                                                builder.setSender(0);
+                                                builder.setMsgId(singleMessage.getMsgId());
+                                                builder.setType(TypeEnum.RE_LOGIN.getCode());
+                                                builder.setUserId(user.getUserId());
+                                                builder.setNickname(nickname);
+                                                sc.writeAndFlush(builder.build());
+                                            } else {
+                                                //密码错误  直接关了算了
+                                                ctx.close();
                                             }
                                         }
-//                                        if()
+                                    } else if (singleMessage.getType() == TypeEnum.SINGLE.getCode()) {
+                                        int senderId = singleMessage.getSender();
+                                        int receiver = singleMessage.getReceiver();
+                                        User receiverUser = onlineMap.get(receiver);
+                                        if (receiverUser == null) {
 
+                                        } else {
+                                            receiverUser.getChannel().writeAndFlush(singleMessage);
+                                        }
+                                    } else if (singleMessage.getType() == TypeEnum.ALL.getCode()) {
+                                        for (Integer integer : onlineMap.keySet()) {
+                                            onlineMap.get(integer).getChannel().writeAndFlush(singleMessage);
+                                        }
                                     }
                                 } else {
                                     System.out.println(msg);
