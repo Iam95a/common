@@ -1,6 +1,6 @@
 package com.chen.common.im;
 
-import com.chen.common.im.entity.User;
+import com.chen.common.im.spring.service.RedisService;
 import com.chen.common.protobuf.RequestMessageProto;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -12,16 +12,21 @@ import io.netty.handler.codec.protobuf.ProtobufDecoder;
 import io.netty.handler.codec.protobuf.ProtobufEncoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ImServer {
 
-
     public static void main(String[] args) throws Exception {
+        // create and configure beans
+        ApplicationContext context = new ClassPathXmlApplicationContext("services.xml");
+        AppContext.init(context);
+        RedisService redisService = context.getBean(RedisService.class);
+
         NioEventLoopGroup group = new NioEventLoopGroup();
+
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(group)
                 .channel(NioServerSocketChannel.class)

@@ -2,10 +2,9 @@ package com.chen.common.im;
 
 import com.chen.common.im.constant.Constant;
 import com.chen.common.im.entity.User;
+import com.chen.common.im.spring.service.RedisService;
 import com.chen.common.protobuf.RequestMessageProto;
-import com.chen.common.protobuf.enums.TypeEnum;
 import com.chen.common.redis.RedisKeys;
-import com.chen.common.redis.RedisUtil;
 import com.google.common.collect.ImmutableMap;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -65,7 +64,7 @@ public class ImHandler extends ChannelInboundHandlerAdapter {
                 RequestMessageProto.RequestMessage.User loginUser = requestMessage.getUser();
                 String nickname = loginUser.getNickname();
                 String password = loginUser.getPassword();
-                Map<String, String> userMap = RedisUtil.getRedisUtil().hgetall(nickname);
+                Map<String, String> userMap = AppContext.getContext().getBean(RedisService.class).hgetAll(nickname);
                 User user = User.map2User(userMap);
                 if (user == null) {
                     //那么走用户注册的路线
@@ -75,7 +74,7 @@ public class ImHandler extends ChannelInboundHandlerAdapter {
                     user.setNickname(nickname);
                     user.setPassword(DigestUtils.md5Hex(password));
                     user.setChannel(ctx.channel());
-                    RedisUtil.getRedisUtil().hmset(nickname, User.user2Map(user));
+                    AppContext.getContext().getBean(RedisService.class).hmset(nickname, User.user2Map(user));
                     channelMap.put(ctx.channel().id().asShortText(), user);
                     onlineMap.put(userId.intValue(), user);
                     sendSuccess(Constant.CMD_LOGIN, requestMessage.getMsgId(), ImmutableMap.of("userId", userId + ""), ctx);
@@ -114,7 +113,7 @@ public class ImHandler extends ChannelInboundHandlerAdapter {
     }
 
     private long getId() {
-        return RedisUtil.getRedisUtil().incrBy(RedisKeys.USER_ID, 1);
+        return AppContext.getContext().getBean(RedisService.class).incr(RedisKeys.USER_ID, 1);
     }
 
 }
