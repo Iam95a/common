@@ -1,6 +1,5 @@
 package com.chen.common.im;
 
-import com.chen.common.im.spring.service.RedisService;
 import com.chen.common.protobuf.RequestMessageProto;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -23,8 +22,6 @@ public class ImServer {
         // create and configure beans
         ApplicationContext context = new ClassPathXmlApplicationContext("services.xml");
         AppContext.init(context);
-        RedisService redisService = context.getBean(RedisService.class);
-
         NioEventLoopGroup group = new NioEventLoopGroup();
 
         ServerBootstrap serverBootstrap = new ServerBootstrap();

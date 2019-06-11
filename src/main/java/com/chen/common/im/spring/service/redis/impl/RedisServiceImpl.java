@@ -1,8 +1,9 @@
-package com.chen.common.im.spring.service.impl;
+package com.chen.common.im.spring.service.redis.impl;
 
 
 import com.chen.common.im.SysLogger;
 import com.chen.common.im.spring.service.RedisService;
+import com.chen.common.im.spring.service.redis.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.DataType;
 import org.springframework.data.redis.core.*;

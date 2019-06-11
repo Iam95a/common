@@ -2,13 +2,13 @@ package com.chen.common.im;
 
 import com.chen.common.im.constant.Constant;
 import com.chen.common.im.entity.User;
-import com.chen.common.im.spring.service.RedisService;
+import com.chen.common.im.spring.service.redis.RedisService;
+import com.chen.common.im.spring.service.user.UserService;
 import com.chen.common.protobuf.RequestMessageProto;
 import com.chen.common.redis.RedisKeys;
 import com.google.common.collect.ImmutableMap;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import org.apache.commons.codec.digest.DigestUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,23 +36,6 @@ public class ImHandler extends ChannelInboundHandlerAdapter {
         channelMap.remove(ctx.channel().id().asShortText());
     }
 
-    private void sendSuccess(String cmd, Long msgId, Map<String, String> param, ChannelHandlerContext ctx) {
-        RequestMessageProto.RequestMessage.Builder builder = RequestMessageProto.RequestMessage.newBuilder();
-        builder.setCommand(cmd);
-        builder.setMsgId(msgId);
-        builder.getParamsMap().putAll(param);
-        builder.setCode(200);
-        ctx.writeAndFlush(builder.build());
-    }
-
-    private void sendFail(String cmd, Long msgId, Map<String, String> param, ChannelHandlerContext ctx) {
-        RequestMessageProto.RequestMessage.Builder builder = RequestMessageProto.RequestMessage.newBuilder();
-        builder.setCommand(cmd);
-        builder.setMsgId(msgId);
-        builder.getParamsMap().putAll(param);
-        builder.setCode(400);
-        ctx.writeAndFlush(builder.build());
-    }
 
 
     @Override
@@ -61,36 +44,11 @@ public class ImHandler extends ChannelInboundHandlerAdapter {
             RequestMessageProto.RequestMessage requestMessage = (RequestMessageProto.RequestMessage) msg;
             String command = requestMessage.getCommand();
             if (command.equals(Constant.CMD_LOGIN)) {
+                UserService userService = AppContext.getContext().getBean(UserService.class);
                 RequestMessageProto.RequestMessage.User loginUser = requestMessage.getUser();
                 String nickname = loginUser.getNickname();
                 String password = loginUser.getPassword();
-                Map<String, String> userMap = AppContext.getContext().getBean(RedisService.class).hgetAll(nickname);
-                User user = User.map2User(userMap);
-                if (user == null) {
-                    //那么走用户注册的路线
-                    Long userId = getId();
-                    user = new User();
-                    user.setUserId(userId);
-                    user.setNickname(nickname);
-                    user.setPassword(DigestUtils.md5Hex(password));
-                    user.setChannel(ctx.channel());
-                    AppContext.getContext().getBean(RedisService.class).hmset(nickname, User.user2Map(user));
-                    channelMap.put(ctx.channel().id().asShortText(), user);
-                    onlineMap.put(userId.intValue(), user);
-                    sendSuccess(Constant.CMD_LOGIN, requestMessage.getMsgId(), ImmutableMap.of("userId", userId + ""), ctx);
-                } else {
-                    if (user.getPassword().equals(DigestUtils.md5Hex(password))) {
-                        //密码校验通过
-                        channelMap.put(ctx.channel().id().asShortText(), user);
-                        onlineMap.put(user.getUserId().intValue(), user);
-                        sendSuccess(Constant.CMD_LOGIN, requestMessage.getMsgId(),
-                                ImmutableMap.of("userId", user.getUserId() + ""), ctx);
-
-                    } else {
-                        //密码错误  直接关了算了
-                        sendFail(Constant.CMD_LOGIN, requestMessage.getMsgId(), new HashMap<>(0), ctx);
-                    }
-                }
+                userService.login(nickname, password, ctx.channel(),requestMessage);
             } else if (requestMessage.getCommand().equals(Constant.CMD_SINGLE)) {
                 RequestMessageProto.RequestMessage.SingleMessage singleMessage = requestMessage.getSingleMessage();
                 long receiverId = singleMessage.getReceiverId();
