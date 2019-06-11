@@ -1,6 +1,6 @@
 package com.chen.common.im.entity;
 
-import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.Channel;
 import lombok.Data;
 import org.apache.commons.collections4.MapUtils;
 
@@ -9,16 +9,16 @@ import java.util.Map;
 
 @Data
 public class User {
-    private Integer userId;
+    private Long userId;
     private String nickname;
     private String password;
     private Long createTime;
-    private SocketChannel channel;
+    private Channel channel;
 
     public static User map2User(Map<String, String> map) {
         if (MapUtils.isNotEmpty(map)) {
             User user = new User();
-            user.setUserId(Integer.valueOf(map.getOrDefault("userId", "0")));
+            user.setUserId(Long.parseLong(map.getOrDefault("userId", "0")));
             user.setNickname(String.valueOf(map.getOrDefault("nickname", "")));
             user.setPassword(String.valueOf(map.get("password")));
             user.setCreateTime(Long.parseLong(map.get("createTime")));
