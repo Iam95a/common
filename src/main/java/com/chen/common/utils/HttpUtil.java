@@ -1,8 +1,11 @@
 package com.chen.common.utils;
 
 
+import com.chen.common.http.util.FileUtil;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -16,12 +19,14 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public final class HttpUtil {
+
 
     private static final int DEF_TIME_OUT = 3000;
     private static final String DEF_CHARSET = "utf-8";
@@ -31,13 +36,64 @@ public final class HttpUtil {
         return doPost(url, json, DEF_TIME_OUT);
     }
 
+    public static String downProxyGet(String url, String filePath, String fileName) {
+        String result = null;
+        // try() 关闭流
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet httpGet = new HttpGet(url);
+
+            // 设置超时时间
+            RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(DEF_TIME_OUT)
+                    .setConnectTimeout(DEF_TIME_OUT)
+                    .setProxy(HttpHost.create("http://127.0.0.1:1080")).
+
+                            build();
+            httpGet.setConfig(requestConfig);
+
+            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+                if (response != null) {
+                    InputStream stream = response.getEntity().getContent();
+                    FileUtil.writeToLocal(filePath, fileName, stream);
+                }
+            }
+        } catch (Exception e) {
+        }
+        return result;
+    }
+
+
+    public static String doProxyGet(String url, String charSet) {
+        String result = null;
+        // try() 关闭流
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet httpGet = new HttpGet(url);
+
+            // 设置超时时间
+            RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(DEF_TIME_OUT)
+                    .setConnectTimeout(DEF_TIME_OUT)
+                    .setProxy(HttpHost.create("http://127.0.0.1:1080")).
+
+                            build();
+            httpGet.setConfig(requestConfig);
+
+            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+                if (response != null) {
+                    InputStream stream = response.getEntity().getContent();
+                    result = IOUtils.toString(stream, charSet);
+                }
+            }
+        } catch (Exception e) {
+        }
+        return result;
+    }
+
     public static String doGet(String url) {
         // 超时时间为3s
         return doGet(url, DEF_TIME_OUT, DEF_CHARSET);
     }
 
-    public static String doGet(String url,String charSet){
-        return doGet(url,DEF_TIME_OUT,charSet);
+    public static String doGet(String url, String charSet) {
+        return doGet(url, DEF_TIME_OUT, charSet);
     }
 
 
