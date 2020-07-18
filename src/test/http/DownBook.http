@@ -1,0 +1,4 @@
+GET http://localhost:8888/download/byUrl?url=http://www.xinbqg.com/73/73334/&charSet=utf-8
+Accept: application/json
+
+###

@@ -17,7 +17,7 @@ import java.util.Properties;
 public class MailUtil {
     public static String account = "18858113996";
     public static String password = "utJvQAq5XD9cWHT";
-    public static String authPsd = "utJvQAq5XD9cWHT1";
+    public static String authPsd = "WVQGRITBIXUJQIFZ";
     public static String myAddress = "18858113996@163.com";
     public static final String MAIL_PROTOCOL = "smtp";
     public static final String MAIL_AUTH = "true";
