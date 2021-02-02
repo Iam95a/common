@@ -45,7 +45,7 @@ public final class HttpUtil {
             // 设置超时时间
             RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(DEF_TIME_OUT)
                     .setConnectTimeout(DEF_TIME_OUT)
-                    .setProxy(HttpHost.create("http://127.0.0.1:1080")).
+                    .setProxy(HttpHost.create("http://127.0.0.1:1087")).
 
                             build();
             httpGet.setConfig(requestConfig);
@@ -71,7 +71,7 @@ public final class HttpUtil {
             // 设置超时时间
             RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(DEF_TIME_OUT)
                     .setConnectTimeout(DEF_TIME_OUT)
-                    .setProxy(HttpHost.create("http://127.0.0.1:1080")).
+                    .setProxy(HttpHost.create("http://127.0.0.1:1087")).
 
                             build();
             httpGet.setConfig(requestConfig);

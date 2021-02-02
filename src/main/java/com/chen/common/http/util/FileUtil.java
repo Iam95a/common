@@ -206,7 +206,7 @@ public class FileUtil {
         }
         int index;
         byte[] bytes = new byte[1024];
-        FileOutputStream downloadFile = new FileOutputStream(filePath + "\\" + fileName);
+        FileOutputStream downloadFile = new FileOutputStream(filePath + "/" + fileName);
         while ((index = input.read(bytes)) != -1) {
             downloadFile.write(bytes, 0, index);
             downloadFile.flush();
