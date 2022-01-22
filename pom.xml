@@ -142,6 +142,15 @@
             <version>4.11</version>
             <scope>test</scope>
         </dependency>
+
+
+        <!-- https://mvnrepository.com/artifact/io.projectreactor/reactor-core -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>3.3.22.RELEASE</version>
+        </dependency>
+
     </dependencies>
 
     <build>

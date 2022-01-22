@@ -36,6 +36,14 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.8'
     // https://mvnrepository.com/artifact/com.google.guava/guava
     compile group: 'com.google.guava', name: 'guava', version: '30.1-jre'
+
+    // https://mvnrepository.com/artifact/io.projectreactor/reactor-core
+    implementation 'io.projectreactor:reactor-core:3.3.22.RELEASE'
+
+
+    // https://mvnrepository.com/artifact/com.netflix.hystrix/hystrix-core
+    implementation 'com.netflix.hystrix:hystrix-core:1.5.18'
+
 }
 
 group = 'com.chen'
